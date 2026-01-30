@@ -1,0 +1,25 @@
+{
+  "name": "devsync",
+  "version": "1.0.0",
+  "description": "Plateform for developers",
+  "keywords": [
+    "nodejs",
+    "backend",
+    "js"
+  ],
+  "homepage": "https://github.com/adit-ya15/DevSync#readme",
+  "bugs": {
+    "url": "https://github.com/adit-ya15/DevSync/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adit-ya15/DevSync.git"
+  },
+  "license": "ISC",
+  "author": "Aditya Verma",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
