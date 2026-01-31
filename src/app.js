@@ -3,20 +3,9 @@ const express = require("express");
 const app = express();
 
 app.get("/user",(req,res) => {
+    console.log(req.query)
     res.send({firstname:"Aditya",lastname:"Verma"});
 });
-
-app.post("/user",(req,res) => {
-    res.send("Data saved successfully")
-})
-
-app.delete("/user",(req,res) => {
-    res.send("user deleted");
-})
-
-app.put("/user",(req,res) => {
-    res.send("user updated successfully")
-})
 
 app.listen("9999",() => {
     console.log("Server listens on the port 9999");
