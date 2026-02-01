@@ -2,10 +2,28 @@ const express = require("express");
 
 const app = express();
 
-app.get("/user",(req,res) => {
-    console.log(req.query)
-    res.send({firstname:"Aditya",lastname:"Verma"});
-});
+//before middleware we handle authorization as
+// but this is not a good way
+
+app.get("/admin/getData",(req,res) =>{
+    const token = "stk";
+    const isAuthorized = token === "stks";
+    if(isAuthorized){
+        res.send("Data send successfully");
+    }else{
+        res.status(401).send("unauthorizd admin");
+    }
+})
+
+app.get("/admin/deleteUser",(req,res) =>{
+    const token = "stk";
+    const isAuthorized = token === "stk";
+    if(isAuthorized){
+        res.send("User deleted successfully");
+    }else{
+        res.status(401).send("unauthorizd admin");
+    }
+})
 
 app.listen("9999",() => {
     console.log("Server listens on the port 9999");
