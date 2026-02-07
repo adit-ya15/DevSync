@@ -1,24 +1,19 @@
 const express = require("express");
 
-const app = express();
+const app = express()
 
-const {adminAuth} = require("./middlewares/auth");
+const connectDb = require("./config.js/database")
 
-// this is the best way
+connectDb()
+    .then(() => {
+        console.log("Database connection successful")
+        app.listen("9999",() => {
+            console.log("Server listens on the port 9999");
+        });
+    })
+    .catch((error) => console.log("database cannot be connected"))
 
-app.use("/admin",adminAuth);
 
-app.get("/admin/getData",(req,res) =>{
-    res.send("Data send successfully");
-})
-
-app.get("/admin/deleteUser",(req,res) =>{
-    res.send("User deleted successfully");
-})
-
-app.listen("9999",() => {
-    console.log("Server listens on the port 9999");
-});
 
 
 
