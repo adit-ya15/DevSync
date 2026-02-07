@@ -7,7 +7,7 @@ app.use(express.json())
 const connectDb = require("./config.js/database")
 const User = require("./models/user")
 const validateSignup = require("./utils/validate")
-
+const validator = require("validator")
 
 connectDb()
     .then(() => {
@@ -73,8 +73,34 @@ app.patch("/user",async(req,res) => {
         console.log(error)
         res.status(400).send("User not updated")
     }
-}
-)
+})
+
+app.post("/login",async(req,res) => {
+    try {
+        const {email,password} = req.body
+        console.log(email,password)
+
+        if(validator.isEmail(email)){
+            const user = await User.findOne({email : email});
+            if(user){
+                const pass = user.password;
+                if(bcrypt.compare(password,pass)){
+                    res.send("login successful")
+                }else{
+                    res.send("invalid credentials")
+                }
+            }else{
+                res.send("User not found")
+            }
+        }else{
+            res.status(400).send("Invalid Email")
+        }
+        
+    } catch (error) {
+        console.log("Invalid Credentials",error)
+        res.send("Invalid credentials")
+    }
+})
 /*Some important notes
 Version number : 4.19.18;
 Here 4 represnts = Major
