@@ -87,10 +87,10 @@ app.post("/login", async (req, res) => {
             const user = await User.findOne({ email: email });
             if (user) {
                 const pass = user.password;
-                const isValidPass = await bcrypt.compare(password, pass);
+                const isValidPass = user.validatePassword(password);
 
                 if (isValidPass) {
-                    const token = jwt.sign({ _id: user._id }, "DevTinder@4648h");
+                    const token = user.getJWT();
                     res.cookie("token", token);
                     res.send("login successful")
                 } else {
@@ -119,8 +119,9 @@ app.get("/profile", userAuth, async (req, res) => {
     }
 });
 
-app.post("/sendConnectionRequest",async(req,res) =>{
-    res.send("Connection request send")
+app.post("/sendConnectionRequest",userAuth,async(req,res) =>{
+    const user = req.user;
+    res.send(user.firstName+" Connection request send")
 })
 
 /*Some important notes
