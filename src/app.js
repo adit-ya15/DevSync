@@ -11,6 +11,7 @@ const connectDb = require("./config.js/database")
 const User = require("./models/user")
 const validateSignup = require("./utils/validate")
 const validator = require("validator")
+const {userAuth} = require("./middlewares/auth")
 
 connectDb()
     .then(() => {
@@ -108,23 +109,15 @@ app.post("/login", async (req, res) => {
     }
 })
 
-app.get("/profile", async (req, res) => {
+app.get("/profile",userAuth, async (req, res) => {
     try {
-        const cookie = req.cookies;
-        const { token } = cookie;
 
-        if (!token) {
-            throw new Error("Token not found");
-        }
-        const decodedMessage = await jwt.verify(token, "DevTinder@4648h")
-
-        const userId = decodedMessage._id;
-
-        const user = await User.findById(userId);
+        const user = req.user;
 
         if (!user) {
             throw new Error("User not exist")
         }
+        
         res.send(user)
     } catch (error) {
         res.status(400).send(error.message)
