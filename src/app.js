@@ -1,13 +1,17 @@
 const express = require("express");
 const app = express()
 const cookieParser = require("cookie-parser")
-const jwt = require("jsonwebtoken")
 app.use(express.json())
 app.use(cookieParser())
 
 const connectDb = require("./config.js/database")
-const validator = require("validator")
+const authRouter = require("./routes/auth")
+const profileRouter = require("./routes/profile")
+const requestRouter = require("./routes/request")
 
+app.use(authRouter);
+app.use(profileRouter);
+app.use(requestRouter);
 
 connectDb()
     .then(() => {
@@ -17,6 +21,7 @@ connectDb()
         });
     })
     .catch((error) => console.log("database cannot be connected",error))
+
 
 /*Some important notes
 Version number : 4.19.18;

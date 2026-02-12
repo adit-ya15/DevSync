@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const validateSignup = require("../utils/validate");
 const User = require("../models/user");
+const validator = require("validator");
 
 
 const authRouter = express.Router();
@@ -13,7 +14,7 @@ authRouter.post("/signup", async (req, res) => {
 
         //encrypting the password
         const { firstName, lastName, age, gender, email, password } = req.body
-        const passwordHash = await bcrypt.hash(password, 10)
+        const passwordHash = await bcrypt.hash(password, 10);
 
         const user = new User({
             firstName,
@@ -39,11 +40,10 @@ authRouter.post("/login", async (req, res) => {
         if (validator.isEmail(email)) {
             const user = await User.findOne({ email: email });
             if (user) {
-                const pass = user.password;
-                const isValidPass = user.validatePassword(password);
+                const isValidPass = user.validateUser(password)
 
                 if (isValidPass) {
-                    const token = user.getJWT();
+                    const token = await user.getJWT();
                     res.cookie("token", token);
                     res.send("login successful")
                 } else {
@@ -60,6 +60,14 @@ authRouter.post("/login", async (req, res) => {
         console.log("Invalid Credentials", error)
         res.send("Invalid credentials")
     }
+})
+
+authRouter.post("/logout",(req,res) => {
+    res.cookie("token","",{
+        expires: new Date(0)
+    })
+
+    res.send("Logut Successfully")
 })
 
 module.exports = authRouter;
