@@ -40,7 +40,7 @@ authRouter.post("/login", async (req, res) => {
         if (validator.isEmail(email)) {
             const user = await User.findOne({ email: email });
             if (user) {
-                const isValidPass = user.validateUser(password)
+                const isValidPass = await user.validateUser(password)
 
                 if (isValidPass) {
                     const token = await user.getJWT();
