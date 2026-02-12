@@ -1,17 +1,13 @@
 const express = require("express");
-
 const app = express()
-const bcrypt = require("bcryptjs")
 const cookieParser = require("cookie-parser")
 const jwt = require("jsonwebtoken")
 app.use(express.json())
 app.use(cookieParser())
 
 const connectDb = require("./config.js/database")
-const User = require("./models/user")
-const validateSignup = require("./utils/validate")
 const validator = require("validator")
-const {userAuth} = require("./middlewares/auth")
+
 
 connectDb()
     .then(() => {
@@ -21,47 +17,6 @@ connectDb()
         });
     })
     .catch((error) => console.log("database cannot be connected",error))
-
-
-
-app.delete("/user", async (req, res) => {
-    const userId = req.body.userId;
-
-    try {
-        await User.findByIdAndDelete(userId)
-        res.send("User deleted successfully")
-    } catch (error) {
-        console.log("User not deleted", error)
-        res.status(400).send("User not deleted")
-    }
-})
-
-app.patch("/user", async (req, res) => {
-
-    const data = req.body
-    const userId = req.body.userId
-    try {
-        const allowedUpdates = ["firstName", "lastName", "userId", "age"];
-        const isUpdateAllowed = Object.keys(data).every((k) => allowedUpdates.includes(k));
-        if (!isUpdateAllowed) {
-            throw new Error("Update not allowed")
-        }
-        await User.findByIdAndUpdate({ _id: userId }, data)
-        res.send("User updated successfully")
-    } catch (error) {
-        console.log(error)
-        res.status(400).send("User not updated")
-    }
-})
-
-
-
-
-
-app.post("/sendConnectionRequest",userAuth,async(req,res) =>{
-    const user = req.user;
-    res.send(user.firstName+" Connection request send")
-})
 
 /*Some important notes
 Version number : 4.19.18;
