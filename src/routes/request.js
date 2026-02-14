@@ -17,13 +17,13 @@ requestRouter.post("/request/send/:status/:toUserId",userAuth,async(req,res) =>{
             return res.status(400).json({message : `${status} is not allowed here`})
         }
 
-        const isValidToUser = User.findOne({toUserId});
+        const isValidToUser =await User.findById(toUserId);
 
         if(!isValidToUser){
             return res.status(400).json({message : "User not found"})
         }
 
-        const existedRequest = ConnectionRequest.findOne({
+        const existedRequest =await ConnectionRequest.findOne({
             $or: [
                 {fromUserId,toUserId},
                 {fromUserId : toUserId, toUserId : fromUserId}
