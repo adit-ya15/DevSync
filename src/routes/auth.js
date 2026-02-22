@@ -36,32 +36,44 @@ authRouter.post("/signup", async (req, res) => {
 
 authRouter.post("/login", async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { email, password } = req.body;
 
-        if (validator.isEmail(email)) {
-            const user = await User.findOne({ email: email });
-            if (user) {
-                const isValidPass = await user.validateUser(password)
-
-                if (isValidPass) {
-                    const token = await user.getJWT();
-                    res.cookie("token", token);
-                    res.send(user);
-                } else {
-                    res.send("invalid credentials")
-                }
-            } else {
-                res.send("User not found")
-            }
-        } else {
-            res.status(400).send("Invalid Email")
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
         }
 
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        const isValidPass = await user.validateUser(password);
+
+        if (!isValidPass) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        const token = await user.getJWT();
+
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            id: user._id,
+            name: user.name,
+            email: user.email
+        });
+
     } catch (error) {
-        console.log("Invalid Credentials", error)
-        res.send("Invalid credentials")
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
     }
-})
+});
 
 authRouter.post("/logout",(req,res) => {
     res.cookie("token","",{
