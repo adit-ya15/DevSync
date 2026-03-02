@@ -32,7 +32,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
         })
 
         if (existedRequest) {
-            return res.status(400).json({ message: `Request already exist` })
+            return res.status(400).json({ message: `Request already exist`, })
         }
 
         const request = new ConnectionRequest({
@@ -42,10 +42,10 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
         })
 
         await request.save();
-
+        console.log(req.user.firstName)
 
         await sendMail(
-            toUserEmail,
+            toUserEmail.email,
             "Connection Request",
             `${req.user.firstName} sent you a connection request`,
             `<h1>Welcome</h1>
