@@ -22,7 +22,7 @@ const videoSchema = new mongoose.Schema({
     },
     likesCount : {
         type : Number,
-        defualt : 0
+        default : 0
     },
     commentsCount : {
         type : Number,

@@ -16,6 +16,8 @@ const authRouter = require("./routes/auth")
 const profileRouter = require("./routes/profile")
 const requestRouter = require("./routes/request")
 const userRouter = require("./routes/user")
+const videoRouter = require("./routes/videoRoutes")
+app.use("/api/videos", videoRouter);
 
 require("./utils/cronScheduleEmail");
 app.use(authRouter);
