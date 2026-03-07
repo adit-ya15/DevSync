@@ -3,7 +3,7 @@ const Like = require("../models/Like")
 const Comment = require("../models/Comment")
 const cloudinary = require("../config.js/cloudinary");
 
-// upload a new video and store it on Cloudinary
+
 exports.uploadVideo = async(req,res) => {
     try {
         const file = req.file;
