@@ -3,8 +3,48 @@ const { userAuth } = require("../middlewares/auth")
 const { validateProfileEditData } = require("../utils/validate")
 const validator = require("validator")
 const bcrypt = require("bcryptjs");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer")
+const fs = require("fs");
+
+const uploadDir = './uploads/';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const profileRouter = express.Router();
+
+const handleProfileImageUpload = async (req, res, next) => {
+    try {
+        const file = req.file;
+        if (!file) {
+            return next();
+        }
+
+        const uploadRes = await cloudinary.uploader.upload(file.path);
+
+        try {
+            fs.unlinkSync(file.path);
+        } catch (e) {
+            console.error("Error deleting local file:", e);
+        }
+
+        req.body.photoUrl = uploadRes.secure_url;
+        next();
+    } catch (error) {
+        res.status(400).json({ message: "Image upload failed: " + error.message });
+    }
+}
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
     try {
@@ -16,8 +56,19 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
     }
 });
 
-profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
+profileRouter.patch("/profile/edit", userAuth, upload.single("profileImage"), handleProfileImageUpload, async (req, res) => {
     try {
+        if (req.body.age) {
+            req.body.age = Number(req.body.age);
+        }
+        if (typeof req.body.skills === "string") {
+            try {
+                req.body.skills = JSON.parse(req.body.skills);
+            } catch (e) {
+                // Ignore parsing errors, let validator catch it
+            }
+        }
+
         validateProfileEditData(req.body);
 
         const user = req.user;
@@ -38,7 +89,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     }
 });
 
-profileRouter.post("/profile/password", userAuth,async (req, res) => {
+profileRouter.post("/profile/password", userAuth, async (req, res) => {
     try {
         const loggesInUser = req.user;
 
@@ -47,15 +98,15 @@ profileRouter.post("/profile/password", userAuth,async (req, res) => {
         const isOldPassValid = await loggesInUser.validateUser(oldPass);
 
         if (isOldPassValid) {
-            const {newPass} = req.body;
+            const { newPass } = req.body;
             const isStrongNewPass = await validator.isStrongPassword(newPass);
-            if(isStrongNewPass){
-                const newPassHash =await  bcrypt.hash(newPass,10);
+            if (isStrongNewPass) {
+                const newPassHash = await bcrypt.hash(newPass, 10);
                 loggesInUser.password = newPassHash;
 
                 await loggesInUser.save();
                 res.send("Password updated successfully")
-            }else{
+            } else {
                 throw new Error("Please enter strong password")
             }
         }

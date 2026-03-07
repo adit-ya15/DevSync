@@ -103,6 +103,24 @@ exports.addComment = async (req, res) => {
     }
 };
 
+exports.getComments = async (req, res) => {
+    try {
+        const { videoId } = req.params;
+
+        if (!videoId) {
+            return res.status(400).json({ message: "videoId is required" });
+        }
+
+        const comments = await Comment.find({ videoId })
+            .populate("userId", "firstName lastName photoUrl")
+            .sort({ createdAt: -1 });
+
+        res.json(comments);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 
 exports.getFeed = async (req, res) => {
     try {

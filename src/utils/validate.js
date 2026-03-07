@@ -62,7 +62,6 @@ const validateProfileEditData = (data) => {
         "about",
         "skills"
     ];
-    console.log("Keys:", Object.keys(data));
 
     // Allow only permitted fields
     const isAllowed = Object.keys(data).every((key) =>
@@ -162,4 +161,4 @@ const validateProfileEditData = (data) => {
 };
 
 
-module.exports = {validateSignup,validateProfileEditData};
+module.exports = { validateSignup, validateProfileEditData };

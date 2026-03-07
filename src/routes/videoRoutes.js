@@ -32,6 +32,8 @@ videoRouter.post("/like", videoController.toggleLike);
 
 videoRouter.post("/comment", videoController.addComment);
 
+videoRouter.get("/comments/:videoId", userAuth, videoController.getComments);
+
 videoRouter.get("/feed", videoController.getFeed);
 
 module.exports = videoRouter;
