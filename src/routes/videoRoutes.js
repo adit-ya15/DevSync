@@ -4,8 +4,15 @@ const videoRouter = express.Router();
 const videoController = require("../controllers/videoController")
 const { userAuth } = require("../middlewares/auth")
 const multer = require("multer");
-const storage = multer.memoryStorage();
-const upload = multer({storage, limits: { fileSize: 50 * 1024 * 1024 }});
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({storage, limits: { fileSize: 100 * 1024 * 1024 }});
 
 
 videoRouter.post("/upload", userAuth, upload.single("video"), videoController.uploadVideo);

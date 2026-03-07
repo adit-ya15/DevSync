@@ -2,13 +2,14 @@ const Video = require("../models/Video")
 const Like = require("../models/Like")
 const Comment = require("../models/Comment")
 const cloudinary = require("../config.js/cloudinary");
+const fs = require('fs');
 
 
 exports.uploadVideo = async(req,res) => {
     try {
         const file = req.file;
         
-        const result = await cloudinary.uploader.upload(file.buffer,{
+        const result = await cloudinary.uploader.upload(file.path,{
             resource_type : "video",
             folder : "reels"
         })
@@ -20,7 +21,7 @@ exports.uploadVideo = async(req,res) => {
             thumbnail : result.secure_url.replace(".mp4",".jpg")
         })
 
-        file.buffer = null;
+        fs.unlinkSync(file.path);
         
         res.json(video);
 
