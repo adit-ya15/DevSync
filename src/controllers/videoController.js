@@ -52,7 +52,8 @@ exports.addView = async (req, res) => {
 
 exports.toggleLike = async (req, res) => {
     try {
-        const { userId, videoId } = req.body;
+        const { videoId } = req.body;
+        const userId = req.user._id;
 
         if (!userId || !videoId) {
             return res.status(400).json({ message: "userId and videoId are required" });
@@ -81,7 +82,8 @@ exports.toggleLike = async (req, res) => {
 
 exports.addComment = async (req, res) => {
     try {
-        const { userId, videoId, text } = req.body;
+        const { videoId, text } = req.body;
+        const userId = req.user._id;
 
         if (!userId || !videoId || !text) {
             return res.status(400).json({ message: "userId, videoId and text are required" });
@@ -124,11 +126,27 @@ exports.getComments = async (req, res) => {
 
 exports.getFeed = async (req, res) => {
     try {
-        const videos = await Video.find()
-            .sort({ createdAt: -1 })
-            .limit(20);
+        const loggedInUserId = req.user._id;
 
-        res.json(videos);
+        const videos = await Video.find().populate("userId", "firstName lastName photoUrl")
+            .sort({ createdAt: -1 })
+            .limit(20)
+            .lean();
+
+        const videoIds = videos.map(v => v._id);
+        const userLikes = await Like.find({
+            userId: loggedInUserId,
+            videoId: { $in: videoIds }
+        });
+
+        const likedVideoIds = new Set(userLikes.map(like => like.videoId.toString()));
+
+        const videosWithLikedStatus = videos.map(video => ({
+            ...video,
+            isLiked: likedVideoIds.has(video._id.toString())
+        }));
+
+        res.json(videosWithLikedStatus);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -7,7 +7,7 @@ const yesterDay = subDays(new Date(), 0);
 const start = startOfDay(yesterDay);
 const end = endOfDay(yesterDay);
 
-cron.schedule("* * * * * ", async () => {
+cron.schedule("0 8 1 1 1 ", async () => {
     try {
         const pendingRequests =await ConnectionRequest.find({
             status: "interested",

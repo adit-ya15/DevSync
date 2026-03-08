@@ -26,14 +26,14 @@ videoRouter.post("/upload", userAuth, upload.single("video"), videoController.up
 
 videoRouter.delete("/:id", userAuth, videoController.deleteVideo);
 
-videoRouter.patch("/:id/view", videoController.addView);
+videoRouter.patch("/:id/view",userAuth, videoController.addView);
 
-videoRouter.post("/like", videoController.toggleLike);
+videoRouter.post("/like", userAuth, videoController.toggleLike);
 
-videoRouter.post("/comment", videoController.addComment);
+videoRouter.post("/comment", userAuth, videoController.addComment);
 
 videoRouter.get("/comments/:videoId", userAuth, videoController.getComments);
 
-videoRouter.get("/feed", videoController.getFeed);
+videoRouter.get("/feed", userAuth, videoController.getFeed);
 
 module.exports = videoRouter;

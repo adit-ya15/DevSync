@@ -122,7 +122,7 @@ authRouter.post("/auth/google/callback", async (req, res) => {
         }
 
         const token = await user.getJWT();
-
+        
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -133,6 +133,7 @@ authRouter.post("/auth/google/callback", async (req, res) => {
                 message: "Login Successfully",
                 data: user
             })
+        req.user = user;
     } catch (error) {
         res.status(400).json({ message: "Invalid Google Token" })
     }
