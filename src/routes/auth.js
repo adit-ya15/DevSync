@@ -117,7 +117,7 @@ authRouter.post("/resend-verification", async (req, res) => {
     await user.save();
 
     const verifyLink =
-        `${process.env.BACKEND_URL}/auth/verify-email/${token}`;
+        `${process.env.BACKEND_URL}/verify-email/${token}`;
 
     await sendEmail({
         to: user.email,
