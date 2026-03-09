@@ -19,13 +19,16 @@ const profileRouter = require("./routes/profile")
 const requestRouter = require("./routes/request")
 const userRouter = require("./routes/user")
 const videoRouter = require("./routes/videoRoutes")
-app.use(videoRouter);
-
+const paymentRouter = require('./routes/payment')
 require("./utils/cronScheduleEmail");
+
+
 app.use(authRouter);
 app.use(profileRouter);
 app.use(requestRouter);
 app.use(userRouter);
+app.use(paymentRouter);
+app.use(videoRouter);
 
 connectDb()
     .then(() => {
