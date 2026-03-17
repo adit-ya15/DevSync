@@ -236,7 +236,7 @@ authRouter.post("/forgot-password", async (req, res) => {
     await user.save();
 
     const resetLink =
-        `${process.env.BACKEND_URL}/auth/reset-password/${token}`;
+        `${process.env.BACKEND_URL}/reset-password/${token}`;
 
     await sendEmail({
         to: user.email,
