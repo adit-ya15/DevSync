@@ -229,6 +229,13 @@ authRouter.post("/forgot-password", async (req, res) => {
         return res.json({ message: "If the account exists, a reset email has been sent" });
     }
 
+    const frontendUrl = process.env.FRONTEND_URL?.trim();
+    if (!frontendUrl) {
+        return res.status(500).json({
+            message: "FRONTEND_URL is not configured on the server"
+        });
+    }
+
     const token = crypto.randomBytes(32).toString("hex");
     user.passwordResetToken = token
     user.passwordResetTokenExpires = Date.now() + 3600000;
@@ -236,7 +243,7 @@ authRouter.post("/forgot-password", async (req, res) => {
     await user.save();
 
     const resetLink =
-        `${process.env.FRONTEND_URL}/reset-password/${token}`;
+        `${frontendUrl.replace(/\/$/, "")}/reset-password/${token}`;
 
     await sendEmail({
         to: user.email,
