@@ -4,16 +4,43 @@ const cookieParser = require("cookie-parser")
 const cors = require("cors")
 const dotenv = require("dotenv")
 const http = require("http");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const initializeSocket = require("./config.js/socket");
 const server = http.createServer(app);
 
 dotenv.config();
+
+// Security Headers
+app.use(helmet());
+
+// Rate Limiting for sensitive routes
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    message: "Too many requests from this IP, please try again after 15 minutes",
+    standardHeaders: true, 
+    legacyHeaders: false, 
+});
+
 app.use(express.json({ limit: '100mb' }))
 app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.use(express.raw({ limit: '100mb' }))
 app.use(cookieParser())
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+].filter(Boolean); // Filter out undefined values
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true
 }))
 
@@ -28,6 +55,12 @@ const videoRouter = require("./routes/videoRoutes")
 const paymentRouter = require('./routes/payment');
 
 require("./utils/cronScheduleEmail");
+
+app.use("/setup", limiter); 
+app.use("/login", limiter);
+app.use("/signup", limiter);
+app.use("/forgot-password", limiter);
+app.use("/resend-verification", limiter);
 
 
 app.use(authRouter);

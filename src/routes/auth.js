@@ -19,7 +19,8 @@ authRouter.post("/signup", async (req, res) => {
         validateSignup(req.body);
 
         const { firstName, lastName, email, password } = req.body;
-        const verificationToken = crypto.randomBytes(32).toString("hex");
+        const rawToken = crypto.randomBytes(32).toString("hex");
+        const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
         const passwordHash = await bcrypt.hash(password, 10);
 
         const user = new User({
@@ -27,7 +28,7 @@ authRouter.post("/signup", async (req, res) => {
             lastName,
             email: email.toLowerCase(),
             password: passwordHash,
-            verificationToken,
+            verificationToken: hashedToken,
             authProvider: "local",
             isVerified: false,
             verificationTokenExpires: Date.now() + 3600000
@@ -36,7 +37,7 @@ authRouter.post("/signup", async (req, res) => {
         const savedUser = await user.save();
 
         const verifyLink =
-            `${process.env.BACKEND_URL}/verify-email/${verificationToken}`;
+            `${process.env.BACKEND_URL}/verify-email/${rawToken}`;
 
         await sendEmail({
             to: savedUser.email,
@@ -65,9 +66,10 @@ authRouter.post("/signup", async (req, res) => {
 
 authRouter.get("/verify-email/:token", async (req, res) => {
     try {
+        const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
 
         const user = await User.findOne({
-            verificationToken: req.params.token,
+            verificationToken: hashedToken,
             verificationTokenExpires: { $gt: Date.now() }
         });
 
@@ -110,14 +112,16 @@ authRouter.post("/resend-verification", async (req, res) => {
             message: "Please wait before requesting another email"
         });
     }
-    const token = crypto.randomBytes(32).toString("hex");
-    user.verificationToken = token
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    
+    user.verificationToken = hashedToken;
     user.verificationTokenExpires = Date.now() + 3600000;
 
     await user.save();
 
     const verifyLink =
-        `${process.env.BACKEND_URL}/verify-email/${token}`;
+        `${process.env.BACKEND_URL}/verify-email/${rawToken}`;
 
     await sendEmail({
         to: user.email,
@@ -223,12 +227,6 @@ authRouter.post("/login", async (req, res) => {
 });
 
 authRouter.post("/forgot-password", async (req, res) => {
-    const user = await User.findOne({ email: req.body.email.toLowerCase() });
-
-    if (!user) {
-        return res.json({ message: "If the account exists, a reset email has been sent" });
-    }
-
     const frontendUrl = process.env.FRONTEND_URL?.trim();
     if (!frontendUrl) {
         return res.status(500).json({
@@ -236,14 +234,28 @@ authRouter.post("/forgot-password", async (req, res) => {
         });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
-    user.passwordResetToken = token
+    const email = req.body.email?.toLowerCase();
+    
+    if (!email || !validator.isEmail(email)) {
+        return res.status(400).json({ message: "Invalid email" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.json({ message: "If the account exists, a reset email has been sent" });
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    
+    user.passwordResetToken = hashedToken;
     user.passwordResetTokenExpires = Date.now() + 3600000;
 
     await user.save();
 
     const resetLink =
-        `${frontendUrl.replace(/\/$/, "")}/reset-password/${token}`;
+        `${frontendUrl.replace(/\/$/, "")}/reset-password/${rawToken}`;
 
     await sendEmail({
         to: user.email,
@@ -251,17 +263,19 @@ authRouter.post("/forgot-password", async (req, res) => {
         html: `<a href="${resetLink}">Reset Password</a>`
     });
 
-    res.json({ message: "Password reset email sent" });
+    res.json({ message: "If the account exists, a reset email has been sent" });
 })
 
 authRouter.post("/reset-password/:token", async (req, res) => {
+    const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
+
     const user = await User.findOne({
-        passwordResetToken: req.params.token,
+        passwordResetToken: hashedToken,
         passwordResetTokenExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-        return res.status(403).json({ message: "Invalid or Expired Token" })
+        return res.status(400).json({ message: "Invalid or expired token" })
     }
 
     const hashed = await bcrypt.hash(req.body.password, 10);
