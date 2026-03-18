@@ -11,13 +11,16 @@ const server = http.createServer(app);
 
 dotenv.config();
 
-// Security Headers
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+].filter(Boolean); 
+
 app.use(helmet());
 
-// Rate Limiting for sensitive routes
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
     message: "Too many requests from this IP, please try again after 15 minutes",
     standardHeaders: true, 
     legacyHeaders: false, 
@@ -28,10 +31,6 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }))
 app.use(express.raw({ limit: '100mb' }))
 app.use(cookieParser())
 
-const allowedOrigins = [
-    "http://localhost:5173",
-    process.env.FRONTEND_URL,
-].filter(Boolean); // Filter out undefined values
 
 app.use(cors({
     origin: function (origin, callback) {
