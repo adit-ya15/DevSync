@@ -6,7 +6,7 @@ const dotenv = require("dotenv")
 const http = require("http");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const initializeSocket = require("./config.js/socket");
+const { initializeSocket } = require("./config.js/socket");
 const server = http.createServer(app);
 
 dotenv.config();

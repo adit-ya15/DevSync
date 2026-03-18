@@ -1,6 +1,7 @@
 const { userAuth } = require("../middlewares/auth");
 const Chat = require("../models/chat");
 const Message = require("../models/message");
+const { getIO } = require("../config.js/socket");
 
 const express = require("express");
 
@@ -55,6 +56,11 @@ messageRouter.post("/send/message", userAuth, async (req, res) => {
         await Chat.findByIdAndUpdate(chatId, {
             lastMessage: message._id
         });
+
+        const io = getIO();
+        if (io) {
+            io.to(chatId.toString()).emit("messageReceived", message);
+        }
 
         res.json({ message });
     } catch (error) {
