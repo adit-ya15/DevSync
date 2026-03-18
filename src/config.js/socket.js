@@ -6,9 +6,14 @@ const Message = require("../models/message");
 let ioInstance = null;
 
 const initializeSocket = (server) => {
+    const allowedOrigins = [
+        "http://localhost:5173",
+        process.env.FRONTEND_URL,
+    ].filter(Boolean);
+
     const io = socket(server, {
         cors: {
-            origin: "http://localhost:5173",
+            origin: allowedOrigins,
             credentials: true
         }
     });
@@ -17,11 +22,26 @@ const initializeSocket = (server) => {
 
     io.use((socketClient, next) => {
         try {
-            const token = socketClient.handshake.auth?.token;
+            let token = socketClient.handshake.auth?.token;
+            const cookieStr = socketClient.handshake.headers?.cookie;
+
+            if (!token && cookieStr) {
+                const match = cookieStr.match(/(?:^|;\s*)token=([^;]*)/);
+                if (match) {
+                    token = decodeURIComponent(match[1]);
+                }
+            }
+
+            if (!token) {
+                console.log("❌ Socket Auth Failed: Token missing in handshake & cookies");
+                return next(new Error("Authentication error: Token missing"));
+            }
+
             const user = jwt.verify(token, process.env.JWT_SECRET);
             socketClient.user = user;
             next();
         } catch (error) {
+            console.log("❌ Socket Auth Failed:", error.message);
             next(new Error("Authentication error"));
         }
     });
