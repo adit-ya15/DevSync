@@ -17,6 +17,7 @@ const requiredEnv = [
     "CLOUDINARY_API_SECRET",
     "RAZORPAY_KEYID",
     "RAZORPAY_KEY_SECRET",
+    "RAZORPAY_WEBHOOK_SECRET",
     "SMTP_HOST",
     "SMTP_PORT",
     "SMTP_USER",

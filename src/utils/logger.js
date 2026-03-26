@@ -1,13 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 const { createLogger, format, transports } = require("winston");
+const config = require("../config/index")
 
 const logsDir = path.resolve(process.cwd(), "logs");
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }
 
-const nodeEnv = process.env.NODE_ENV || "development";
+const nodeEnv = config.deployment.nodeEnv || "development";
 
 const logger = createLogger({
     level: nodeEnv === "development" ? "debug" : "info",

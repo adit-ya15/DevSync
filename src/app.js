@@ -11,6 +11,7 @@ const config = require("./config/index")
 const errorHandler = require("./middlewares/errorMiddleware")
 const AppError = require("./utils/AppError")
 const logger = require("./utils/logger")
+const requestLogger = require("./middlewares/requestLogger")
 
 const allowedOrigins = [
     "http://localhost:5173",
@@ -29,7 +30,6 @@ const limiter = rateLimit({
 
 app.use(express.json({ limit: '100mb' }))
 app.use(express.urlencoded({ limit: '100mb', extended: true }))
-app.use(express.raw({ limit: '100mb' }))
 app.use(cookieParser())
 
 
@@ -43,6 +43,8 @@ app.use(cors({
     },
     credentials: true
 }))
+
+app.use(requestLogger);
 
 initializeSocket(server);
 
