@@ -36,7 +36,7 @@ paymentRouter.post("/payment/create",userAuth,async(req,res) => {
 
         const savedPayment = await Payment.save();
 
-        res.json({...savedPayment.toJSON()},process.env.RAZORPAY_KEYID)
+        res.json({...savedPayment.toJSON()},config.finance.razorpayKeyId)
     } catch (error) {
         return res.status(500).json({message : error.message})
     }
