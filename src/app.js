@@ -57,6 +57,11 @@ const chatRouter = require("./routes/chat")
 const messageRouter = require("./routes/message")
 const videoRouter = require("./routes/videoRoutes")
 const paymentRouter = require('./routes/payment');
+const notificationRouter = require('./routes/notification');
+const projectRouter = require('./routes/projectRouter');
+const taskRouter = require('./routes/taskRouter');
+const buildLogRouter = require('./routes/buildLogRouter');
+const matchRouter = require('./routes/matchRouter');
 
 require("./utils/cronScheduleEmail");
 
@@ -75,6 +80,11 @@ app.use(chatRouter);
 app.use(messageRouter);
 app.use(paymentRouter);
 app.use(videoRouter);
+app.use(notificationRouter);
+app.use(projectRouter);
+app.use(taskRouter);
+app.use(buildLogRouter);
+app.use(matchRouter);
 
 app.use((req, res, next) => {
     next(new AppError(`Cannot find ${req.originalUrl} on this server`, 404));

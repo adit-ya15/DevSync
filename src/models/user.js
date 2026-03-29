@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
             unique: true,
             sparse: true,
         },
+        githubUsername: {
+            type: String,
+            trim: true,
+        },
         photoUrl: {
             type: String,
         },
