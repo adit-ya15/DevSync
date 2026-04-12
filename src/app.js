@@ -19,7 +19,7 @@ const {
 } = require("./utils/origin");
 
 const allowedOrigins = parseConfiguredOrigins(
-    "http://localhost:5173",
+    "http://devsyncapp.in", "http://www.devsyncapp.in",
     config.general.frontendUrl
 );
 
@@ -31,11 +31,11 @@ app.use(helmet({
 }));
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, 
-    max: 100, 
+    windowMs: 15 * 60 * 1000,
+    max: 100,
     message: "Too many requests from this IP, please try again after 15 minutes",
-    standardHeaders: true, 
-    legacyHeaders: false, 
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 app.use(express.json({ limit: '100mb' }))
@@ -90,7 +90,7 @@ const matchRouter = require('./routes/matchRouter');
 
 require("./utils/cronScheduleEmail");
 
-app.use("/setup", limiter); 
+app.use("/setup", limiter);
 app.use("/login", limiter);
 app.use("/signup", limiter);
 app.use("/forgot-password", limiter);
