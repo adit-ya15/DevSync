@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer")
 const fs = require("fs");
+const User = require("../models/user");
 const AppError = require("../utils/AppError");
 const logger = require("../utils/logger");
 
@@ -25,6 +26,34 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const profileRouter = express.Router();
+
+const addGithubProfile = (user) => {
+    if (!user) {
+        return user;
+    }
+
+    const plainUser = typeof user.toObject === "function" ? user.toObject() : { ...user };
+
+    return {
+        ...plainUser,
+        githubUrl: plainUser.githubUsername ? `https://github.com/${plainUser.githubUsername}` : null
+    };
+};
+
+const getPublicProfileById = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.userId)
+            .select("firstName lastName age gender photoUrl coverPhotoUrl about skills githubUsername githubId");
+
+        if (!user) {
+            return next(new AppError("User not found", 404));
+        }
+
+        res.json({ user: addGithubProfile(user) });
+    } catch (error) {
+        next(new AppError(error.message, 400));
+    }
+};
 
 const handleProfileImageUpload = async (req, res, next) => {
     try {
@@ -64,11 +93,14 @@ profileRouter.get("/profile/view", userAuth, async (req, res, next) => {
     try {
         const user = req.user;
         logger.debug("Profile view", { userId: user?._id });
-        res.send(user);
+        res.send(addGithubProfile(user));
     } catch (error) {
         next(new AppError(error.message, 400));
     }
 });
+
+profileRouter.get("/profile/view/:userId", getPublicProfileById);
+profileRouter.get("/profile/:userId", getPublicProfileById);
 
 profileRouter.patch("/profile/edit", userAuth, upload.fields([
     { name: "profileImage", maxCount: 1 },

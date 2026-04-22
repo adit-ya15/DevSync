@@ -6,6 +6,34 @@ const User = require("../models/user")
 const AppError = require("../utils/AppError")
 const MAX_FEED_LIMIT = 50;
 
+const addGithubProfile = (user) => {
+    if (!user) {
+        return user;
+    }
+
+    const plainUser = typeof user.toObject === 'function' ? user.toObject() : { ...user };
+
+    return {
+        ...plainUser,
+        githubUrl: plainUser.githubUsername ? `https://github.com/${plainUser.githubUsername}` : null
+    };
+};
+
+const getPublicUserProfile = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.userId)
+            .select("firstName lastName age gender photoUrl coverPhotoUrl about skills githubUsername githubId");
+
+        if (!user) {
+            return next(new AppError("User not found", 404));
+        }
+
+        res.json({ user: addGithubProfile(user) });
+    } catch (error) {
+        next(new AppError(error.message, 400));
+    }
+};
+
 userRouter.get("/user/request/received",userAuth,async(req,res,next) => {
     try {
         const loggedInUser = req.user;
@@ -105,6 +133,14 @@ userRouter.get("/user/feed", userAuth, async(req,res,next) => {
         next(new AppError(error.message, 400));
     }
 });
+
+userRouter.get("/user/:userId", getPublicUserProfile);
+userRouter.get("/user/view/:userId", getPublicUserProfile);
+userRouter.get("/user/profile/:userId", getPublicUserProfile);
+userRouter.get("/user/public/:userId", getPublicUserProfile);
+userRouter.get("/users/:userId", getPublicUserProfile);
+userRouter.get("/users/view/:userId", getPublicUserProfile);
+userRouter.get("/users/profile/:userId", getPublicUserProfile);
 
 module.exports = userRouter;
 

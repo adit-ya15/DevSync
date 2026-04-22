@@ -7,13 +7,47 @@ const { trackUserActivity } = require('../services/gamificationService');
 
 const projectRouter = express.Router();
 
+const addGithubProfile = (user) => {
+  if (!user) {
+    return user;
+  }
+
+  const plainUser = typeof user.toObject === 'function' ? user.toObject() : { ...user };
+
+  return {
+    ...plainUser,
+    githubUrl: plainUser.githubUsername ? `https://github.com/${plainUser.githubUsername}` : null
+  };
+};
+
+const addGithubProfilesToProject = (project) => {
+  const plainProject = typeof project.toObject === 'function' ? project.toObject() : { ...project };
+
+  return {
+    ...plainProject,
+    owner: addGithubProfile(plainProject.owner),
+    members: Array.isArray(plainProject.members)
+      ? plainProject.members.map((member) => ({
+          ...member,
+          user: addGithubProfile(member.user)
+        }))
+      : plainProject.members,
+    joinRequests: Array.isArray(plainProject.joinRequests)
+      ? plainProject.joinRequests.map((request) => ({
+          ...request,
+          user: addGithubProfile(request.user)
+        }))
+      : plainProject.joinRequests
+  };
+};
+
 projectRouter.get('/projects', userAuth, async (req, res) => {
   try {
     const projects = await Project.find({ status: 'Open' })
-      .populate('owner', 'firstName lastName photoUrl')
-      .populate('members.user', 'firstName lastName photoUrl')
+      .populate('owner', 'firstName lastName photoUrl githubUsername')
+      .populate('members.user', 'firstName lastName photoUrl githubUsername')
       .sort({ createdAt: -1 });
-    res.json(projects);
+    res.json(projects.map(addGithubProfilesToProject));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching projects', error: error.message });
   }
@@ -62,15 +96,15 @@ projectRouter.post('/project', userAuth, async (req, res) => {
 projectRouter.get('/projects/:projectId', userAuth, async (req, res) => {
   try {
     const project = await Project.findById(req.params.projectId)
-      .populate('owner', 'firstName lastName photoUrl')
-      .populate('members.user', 'firstName lastName photoUrl skills')
-      .populate('joinRequests.user', 'firstName lastName photoUrl');
+      .populate('owner', 'firstName lastName photoUrl githubUsername')
+      .populate('members.user', 'firstName lastName photoUrl skills githubUsername')
+      .populate('joinRequests.user', 'firstName lastName photoUrl githubUsername');
     
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
     
-    res.json(project);
+    res.json(addGithubProfilesToProject(project));
   } catch (error) {
     res.status(500).json({ message: 'Error fetching project', error: error.message });
   }
@@ -190,11 +224,11 @@ projectRouter.post('/projects/:projectId/request/:requestId/respond', userAuth, 
     await project.save();
     
     const updatedProject = await Project.findById(req.params.projectId)
-      .populate('owner', 'firstName lastName photoUrl')
-      .populate('members.user', 'firstName lastName photoUrl skills')
-      .populate('joinRequests.user', 'firstName lastName photoUrl');
+      .populate('owner', 'firstName lastName photoUrl githubUsername')
+      .populate('members.user', 'firstName lastName photoUrl skills githubUsername')
+      .populate('joinRequests.user', 'firstName lastName photoUrl githubUsername');
 
-    res.json({ message: `Request ${action}ed successfully`, project: updatedProject });
+    res.json({ message: `Request ${action}ed successfully`, project: addGithubProfilesToProject(updatedProject) });
   } catch (error) {
     res.status(500).json({ message: 'Error responding to request', error: error.message });
   }
